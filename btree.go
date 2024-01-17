@@ -52,7 +52,21 @@ func (t *BTree) Insert(data Data) {
 }
 
 func (t *BTree) Search(data Data) Data {
-	return nil
+	if t.Root == nil {
+		return nil
+	}
+
+	index, isExist := t.Root.List.BinarySearch(data)
+	if isExist {
+		return t.Root.List[index]
+	}
+	if len(t.Root.Children) == 0 {
+		return nil
+	}
+
+	child := t.Root.Children[index]
+	childBTree := &BTree{M: t.M, Root: child}
+	return childBTree.Search(data)
 }
 
 func (t *BTree) Delete(data Data) {

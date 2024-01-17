@@ -1,6 +1,9 @@
 package main
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+)
 
 type User struct {
 	ID   int
@@ -21,4 +24,8 @@ func main() {
 		})
 	}
 
+	data := tree.Search(&User{
+		ID: 88,
+	})
+	fmt.Println(data)
 }
