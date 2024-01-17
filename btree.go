@@ -51,17 +51,17 @@ func (t *BTree) Insert(data Data) {
 	t.Split(leaf)
 }
 
-func (t *BTree) Search(data Data) Data {
+func (t *BTree) Search(data Data) (*Node, int, Data) {
 	if t.Root == nil {
-		return nil
+		return nil, -1, nil
 	}
 
 	index, isExist := t.Root.List.BinarySearch(data)
 	if isExist {
-		return t.Root.List[index]
+		return t.Root, index, t.Root.List[index]
 	}
 	if len(t.Root.Children) == 0 {
-		return nil
+		return nil, -1, nil
 	}
 
 	child := t.Root.Children[index]
@@ -70,6 +70,77 @@ func (t *BTree) Search(data Data) Data {
 }
 
 func (t *BTree) Delete(data Data) {
+	node, index, _ := t.Search(data)
+	if node == nil {
+		return
+	}
+
+	var reBalanceNode *Node
+	min := int(math.Ceil(float64(t.M)/2)) - 1
+	if len(node.Children) > 0 {
+		left := node.Children[index]
+		right := node.Children[index+1]
+
+		var ele Data
+		if len(right.List) > min {
+			ele = right.List[0]
+			right.List = right.List[1:]
+
+			reBalanceNode = right
+		} else {
+			ele = left.List[len(left.List)-1]
+			left.List = left.List[0 : len(left.List)-1]
+
+			reBalanceNode = left
+		}
+		node.List[index] = ele
+	} else {
+		if index+1 == len(node.List) {
+			node.List = node.List[0 : index-1]
+		} else {
+			node.List = append(node.List[0:index], node.List[index+1:]...)
+		}
+		reBalanceNode = node
+	}
+
+	// 调整树使满足条件
+	t.ReBalance(reBalanceNode)
+}
+
+func (t *BTree) ReBalance(node *Node) {
+	if node.Parent == nil && len(node.Children) == 0 {
+		return
+	}
+
+	min := int(math.Ceil(float64(t.M)/2)) - 1
+
+	var childIndex int
+	var leftBrother, rightBrother *Node
+	for index, child := range node.Parent.Children {
+		if child == node {
+			if index-1 >= 0 {
+				leftBrother = node.Parent.Children[index-1]
+			}
+			if index+1 <= len(node.Parent.Children) {
+				rightBrother = node.Parent.Children[index+1]
+			}
+			childIndex = index
+		}
+	}
+
+	if leftBrother != nil && len(leftBrother.List) > min {
+		node.List = append(List{node.Parent.List[childIndex-1]}, node.List...)
+		node.Parent.List[childIndex-1] = leftBrother.List[len(leftBrother.List)-1]
+		leftBrother.List = leftBrother.List[0 : len(leftBrother.List)-1]
+	} else if rightBrother != nil && len(rightBrother.List) > min {
+		node.List = append(node.List, node.Parent.List[childIndex])
+		node.Parent.List[childIndex] = rightBrother.List[0]
+		rightBrother.List = rightBrother.List[1:]
+	} else if leftBrother != nil {
+
+	} else if rightBrother != nil {
+
+	}
 }
 
 func (t *BTree) Split(n *Node) {
