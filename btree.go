@@ -122,10 +122,51 @@ func (t *BTree) Delete(data Data) {
 			}
 		}
 	} else {
-		if len(t.Root.List) >= min {
-
+		node := t.Root.Children[index]
+		if len(node.List) >= min {
+			newTree := &BTree{
+				M:    t.M,
+				Root: node,
+			}
+			newTree.Delete(data)
 		} else {
+			var lefBrother, rightBrother *Node
+			if index > 0 {
+				lefBrother = t.Root.Children[index-1]
+			}
+			if index < len(t.Root.Children)-1 {
+				rightBrother = t.Root.Children[index+1]
+			}
 
+			if lefBrother != nil && len(lefBrother.List) >= min {
+				node.List = append(List{t.Root.List[index-1]}, node.List...)
+				t.Root.List[index-1] = lefBrother.List[len(lefBrother.List)-1]
+				node.Children = append([]*Node{lefBrother.Children[len(lefBrother.Children)-1]}, node.Children...)
+			} else if rightBrother != nil && len(rightBrother.List) >= min {
+				node.List = append(node.List, t.Root.List[index])
+				t.Root.List[index] = rightBrother.List[0]
+				node.Children = append(node.Children, rightBrother.Children[0])
+			} else {
+				if lefBrother != nil {
+					node.List = append(lefBrother.List, append(List{t.Root.List[index-1]}, node.List...)...)
+					t.Root.List = append(t.Root.List[0:index-1], t.Root.List[index:]...)
+
+					node.Children = append(lefBrother.Children, node.Children...)
+					t.Root.Children = append(t.Root.Children[0:index-1], t.Root.Children[index:]...)
+				} else if rightBrother != nil {
+					node.List = append(node.List, append(List{t.Root.List[index]}, rightBrother.List...)...)
+					t.Root.List = append(t.Root.List[0:index], t.Root.List[index+1:]...)
+
+					node.Children = append(node.Children, rightBrother.Children...)
+					t.Root.Children = append(t.Root.Children[0:index+1], t.Root.Children[index+2:]...)
+				}
+			}
+
+			newTree := &BTree{
+				M:    t.M,
+				Root: node,
+			}
+			newTree.Delete(data)
 		}
 	}
 }
