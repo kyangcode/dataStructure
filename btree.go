@@ -155,10 +155,18 @@ func (t *BTree) Delete(data Data) {
 					t.Root.Children = append(t.Root.Children[0:index-1], t.Root.Children[index:]...)
 				} else if rightBrother != nil {
 					node.List = append(node.List, append(List{t.Root.List[index]}, rightBrother.List...)...)
-					t.Root.List = append(t.Root.List[0:index], t.Root.List[index+1:]...)
+					if index == len(t.Root.List)-1 {
+						t.Root.List = t.Root.List[0:index]
+					} else {
+						t.Root.List = append(t.Root.List[0:index], t.Root.List[index+1:]...)
+					}
 
 					node.Children = append(node.Children, rightBrother.Children...)
-					t.Root.Children = append(t.Root.Children[0:index+1], t.Root.Children[index+2:]...)
+					if index+1 == len(t.Root.Children) {
+						t.Root.Children = t.Root.Children[0 : index+1]
+					} else {
+						t.Root.Children = append(t.Root.Children[0:index+1], t.Root.Children[index+2:]...)
+					}
 				}
 			}
 
