@@ -12,16 +12,16 @@ func (u *User) Less(data Data) bool {
 }
 
 func main() {
-	tree := NewBTree(3)
+	tree := NewBTree(5)
 
-	for i := 1; i <= 5; i++ {
+	for i := 1; i <= 20; i++ {
 		tree.Insert(&User{
 			ID:   i,
 			Name: "n" + strconv.Itoa(i),
 		})
 	}
 
-	for i := 5; i >= 1; i-- {
+	for i := 20; i >= 1; i-- {
 		tree.Delete(&User{
 			ID: i,
 		})

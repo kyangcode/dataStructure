@@ -68,6 +68,9 @@ func (t *BTree) Insert(data Data) {
 	t.Split(leaf)
 }
 
+// Search B树搜索
+// 1. 二分查找当前节点，找到直接返回
+// 2. 递归查找子树即可
 func (t *BTree) Search(data Data) (*Node, int, Data) {
 	if t.Root == nil {
 		return nil, -1, nil
@@ -86,6 +89,16 @@ func (t *BTree) Search(data Data) (*Node, int, Data) {
 	return childBTree.Search(data)
 }
 
+// Delete B树根据关键字删除
+// 1. 对于当前节点，若key存在。
+// 2. 如果是叶子节点直接删除即可。
+// 3. 如果是内部节点，则判断左子树关键字个数是否满足最小min，其中min为ceil(M/2)，若满足，则递归删除最右关键字k1，并用k1替换当前关键字。
+// 4. 否则，判断右子树关键字个数是否满足最小min，若满足，则递归安徽念书最左关键字k2, 并用k2替换当前关键字。
+// 5. 否则，合并左右子树和当前关键字，并调用递归删除。
+// 6. 若当前节点不存在要删除的关键字，且关键字一定在c子树。
+// 7. 若c子树关键字大于等于min，则递归调用删除。
+// 8. 否则，看c的兄弟节点是否满足大于等于min，如果是，则将父节点关键字移动至当前节点，并且把兄弟节点移动至父亲节点，并把子树移动至当前节点。
+// 9. 否则合并任意一个兄弟节点和父节点关键字。
 func (t *BTree) Delete(data Data) {
 	min := int(math.Ceil(float64(t.M) / 2))
 
@@ -129,9 +142,9 @@ func (t *BTree) Delete(data Data) {
 					t.Root.List = append(t.Root.List[0:index], t.Root.List[index+1:]...)
 				}
 				if index+1 == len(t.Root.Children)-1 {
-					t.Root.Children = t.Root.Children[0 : index-1]
+					t.Root.Children = t.Root.Children[0 : index+1]
 				} else {
-					t.Root.Children = append(t.Root.Children[0:index], t.Root.Children[index+2:]...)
+					t.Root.Children = append(t.Root.Children[0:index+1], t.Root.Children[index+1:]...)
 				}
 
 				if len(t.Root.List) == 0 {
@@ -169,13 +182,23 @@ func (t *BTree) Delete(data Data) {
 			if lefBrother != nil && len(lefBrother.List) >= min {
 				node.List = append(List{t.Root.List[index-1]}, node.List...)
 				t.Root.List[index-1] = lefBrother.List[len(lefBrother.List)-1]
-				node.Children = append([]*Node{lefBrother.Children[len(lefBrother.Children)-1]}, node.Children...)
-				lefBrother.Children = lefBrother.Children[0 : len(lefBrother.Children)-1]
+
+				if len(lefBrother.Children) != 0 {
+					node.Children = append([]*Node{lefBrother.Children[len(lefBrother.Children)-1]}, node.Children...)
+					node.Children[0].Parent = node
+
+					lefBrother.Children = lefBrother.Children[0 : len(lefBrother.Children)-1]
+				}
 			} else if rightBrother != nil && len(rightBrother.List) >= min {
 				node.List = append(node.List, t.Root.List[index])
 				t.Root.List[index] = rightBrother.List[0]
-				node.Children = append(node.Children, rightBrother.Children[0])
-				rightBrother.Children = rightBrother.Children[1:]
+
+				if len(rightBrother.Children) != 0 {
+					node.Children = append(node.Children, rightBrother.Children[0])
+					node.Children[len(node.Children)-1] = node
+
+					rightBrother.Children = rightBrother.Children[1:]
+				}
 			} else {
 				if lefBrother != nil {
 					node.List = append(lefBrother.List, append(List{t.Root.List[index-1]}, node.List...)...)
@@ -216,7 +239,7 @@ func (t *BTree) Delete(data Data) {
 
 			newTree := &BTree{
 				M:    t.M,
-				Root: node,
+				Root: t.Root,
 			}
 			newTree.Delete(data)
 		}
