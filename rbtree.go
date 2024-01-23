@@ -9,6 +9,10 @@ type RBTree struct {
 	Root *RBTreeNode
 }
 
+func NewRBTree() *RBTree {
+	return &RBTree{}
+}
+
 const (
 	black = 1
 	red   = 2
@@ -71,24 +75,46 @@ func (t *RBTree) Insert(key int) *RBTreeNode {
 	return newNode
 }
 
-func llRotate(node *RBTreeNode) *RBTreeNode {
+func (t *RBTree) llRotate(node *RBTreeNode) {
+	parent := node.Parent
+
 	p := node.Right
 	node.Right = p.Left
-	p.Left.Parent = node
+	if p.Left != nil {
+		p.Left.Parent = node
+	}
 
 	p.Left = node
 	node.Parent = p
-	return p
+
+	if parent == nil {
+		t.Root = p
+	} else if parent.Left == node {
+		parent.Left = p
+	} else {
+		parent.Right = p
+	}
 }
 
-func rrRotate(node *RBTreeNode) *RBTreeNode {
+func (t *RBTree) rrRotate(node *RBTreeNode) {
+	parent := node.Parent
+
 	p := node.Left
 	node.Left = p.Right
-	p.Right.Parent = node
+	if p.Right != nil {
+		p.Right.Parent = node
+	}
 
 	p.Right = node
 	node.Parent = p
-	return p
+
+	if parent == nil {
+		t.Root = p
+	} else if parent.Left == node {
+		parent.Left = p
+	} else {
+		parent.Right = p
+	}
 }
 
 func (t *RBTree) fixup(node *RBTreeNode) {
@@ -98,28 +124,48 @@ func (t *RBTree) fixup(node *RBTreeNode) {
 	}
 
 	grandParent := parent.Parent
-	if grandParent != nil && grandParent.Right.Color == red {
-		parent.Color = black
-		grandParent.Right.Color = black
-		grandParent.Color = red
-		t.fixup(grandParent)
-		return
-	}
+	if grandParent.Right == parent {
+		if grandParent.Left != nil && grandParent.Left.Color == red {
+			parent.Color = black
+			grandParent.Left.Color = black
+			grandParent.Color = red
+			t.fixup(grandParent)
+			return
+		}
 
-	if node == parent.Left {
-		if grandParent != nil {
-			if grandParent.Left == parent {
-				grandParent.Left = rrRotate(parent)
-			} else {
-				grandParent.Right = rrRotate(parent)
-			}
+		if node == parent.Right {
+			t.llRotate(grandParent)
+			parent.Color = black
+			grandParent.Color = red
 		} else {
-			t.Root = rrRotate(parent)
+			t.rrRotate(parent)
+			t.llRotate(grandParent)
+
+			parent.Color = black
+			grandParent.Color = red
 		}
 	} else {
+		if grandParent.Right != nil && grandParent.Right.Color == red {
+			parent.Color = black
+			grandParent.Right.Color = black
+			grandParent.Color = red
+			t.fixup(grandParent)
+			return
+		}
 
-		// ll //rr
+		if node == parent.Left {
+			t.rrRotate(grandParent)
+			parent.Color = black
+			grandParent.Color = red
+		} else {
+			t.llRotate(parent)
+			t.rrRotate(grandParent)
+
+			parent.Color = black
+			grandParent.Color = red
+		}
 	}
+
 }
 
 func (t *RBTree) Delete(key int) {
