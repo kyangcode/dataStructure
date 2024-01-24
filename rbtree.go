@@ -89,10 +89,13 @@ func (t *RBTree) llRotate(node *RBTreeNode) {
 
 	if parent == nil {
 		t.Root = p
+		p.Parent = nil
 	} else if parent.Left == node {
 		parent.Left = p
+		p.Parent = parent
 	} else {
 		parent.Right = p
+		p.Parent = parent
 	}
 }
 
@@ -110,10 +113,13 @@ func (t *RBTree) rrRotate(node *RBTreeNode) {
 
 	if parent == nil {
 		t.Root = p
+		p.Parent = nil
 	} else if parent.Left == node {
 		parent.Left = p
+		p.Parent = parent
 	} else {
 		parent.Right = p
+		p.Parent = parent
 	}
 }
 
@@ -128,8 +134,10 @@ func (t *RBTree) fixup(node *RBTreeNode) {
 		if grandParent.Left != nil && grandParent.Left.Color == red {
 			parent.Color = black
 			grandParent.Left.Color = black
-			grandParent.Color = red
-			t.fixup(grandParent)
+			if grandParent.Parent != nil {
+				grandParent.Color = red
+				t.fixup(grandParent)
+			}
 			return
 		}
 
@@ -148,8 +156,10 @@ func (t *RBTree) fixup(node *RBTreeNode) {
 		if grandParent.Right != nil && grandParent.Right.Color == red {
 			parent.Color = black
 			grandParent.Right.Color = black
-			grandParent.Color = red
-			t.fixup(grandParent)
+			if grandParent.Parent != nil {
+				grandParent.Color = red
+				t.fixup(grandParent)
+			}
 			return
 		}
 
