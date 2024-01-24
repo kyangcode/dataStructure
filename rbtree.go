@@ -149,7 +149,7 @@ func (t *RBTree) fixup(node *RBTreeNode) {
 			t.rrRotate(parent)
 			t.llRotate(grandParent)
 
-			parent.Color = black
+			node.Color = black
 			grandParent.Color = red
 		}
 	} else {
@@ -171,11 +171,10 @@ func (t *RBTree) fixup(node *RBTreeNode) {
 			t.llRotate(parent)
 			t.rrRotate(grandParent)
 
-			parent.Color = black
+			node.Color = black
 			grandParent.Color = red
 		}
 	}
-
 }
 
 func (t *RBTree) Delete(key int) {
